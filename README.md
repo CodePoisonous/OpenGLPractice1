@@ -1,2 +1,2 @@
-# OpenGL-Practice
+# OpenGL Practice
 My OpenGL Practice
