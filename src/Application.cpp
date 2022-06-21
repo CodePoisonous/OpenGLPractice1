@@ -6,26 +6,10 @@
 #include <string>
 #include <sstream>
 
-#define ASSERT(x) if(!(x)) __debugbreak();
-#define GLCall(x) GLClearError();\
-	x;\
-	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
-static void GLClearError()
-{
-	while (glGetError() != GL_NO_ERROR);
-}
-
-static bool GLLogCall(const char* function, const char* file, int line)
-{
-	while (GLenum error = glGetError())
-	{
-		std::cout << "[OpenGl Error] (" << error << ")"  << function <<
-			" " << file << ":" << line << std::endl;
-		return false;
-	}
-	return true;
-}
 
 struct ShaderProgramSource
 {
@@ -144,86 +128,81 @@ int main(void)
 	// 获取gl版本号
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	// 图形端点位置xy坐标
-	float positions[] = {
-		-0.5f, -0.5f,	// 0
-		 0.5f, -0.5f,	// 1
-		 0.5f,  0.5f,	// 2
-		-0.5f,  0.5f,	// 3 
-	};
-
-	// 图形端点的索引序号
-	unsigned int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
-
-	unsigned int vao;		// vertex array object
-	GLCall(glGenVertexArrays(1, &vao));
-	GLCall(glBindVertexArray(vao));
-
-	// 生成positions的buffer
-	unsigned int buffer;
-	GLCall(glGenBuffers(1, &buffer));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
-	
-	GLCall(glEnableVertexAttribArray(0));
-	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
-
-	// 生成indices的buffer
-	unsigned int ibo;			// index buffer object
-	GLCall(glGenBuffers(1, &ibo));
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
-
-	// 读取shader文件，生成shader program
-	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-	GLCall(glUseProgram(shader));
-
-	// 设置fragment shader 的颜色
-	GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-	ASSERT(location != -1);
-	GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
-
-	// 
-	//GLCall(glBindVertexArray(0));
-	//GLCall(glUseProgram(0));
-	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-	//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-	float r = 0.0f;
-	float increment = 0.05f;
-	// 循环直到用户关闭窗口
-	while (!glfwWindowShouldClose(window))
 	{
-		// 渲染
-		GLCall(glClear(GL_COLOR_BUFFER_BIT));
+		// 图形端点位置xy坐标
+		float positions[] = {
+			-0.5f, -0.5f,	// 0
+			 0.5f, -0.5f,	// 1
+			 0.5f,  0.5f,	// 2
+			-0.5f,  0.5f,	// 3 
+		};
 
+		// 图形端点的索引序号
+		unsigned int indices[] = {
+			0, 1, 2,
+			2, 3, 0
+		};
+
+		unsigned int vao;		// vertex array object
+		GLCall(glGenVertexArrays(1, &vao));
+		GLCall(glBindVertexArray(vao));
+
+		// 生成positions的buffer
+		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+
+		GLCall(glEnableVertexAttribArray(0));
+		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
+
+		// 生成indices的buffer
+		IndexBuffer ib(indices, 6);
+
+		// 读取shader文件，生成shader program
+		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 		GLCall(glUseProgram(shader));
-		GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
-				
-		GLCall(glBindVertexArray(vao));				
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
 
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+		// 设置fragment shader 的颜色
+		GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+		ASSERT(location != -1);
+		GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-		if (r > 1.0f)
-			increment = -0.05f;
-		else if (r < 0.0f)
-			increment = 0.05f;
+		GLCall(glBindVertexArray(0));
+		GLCall(glUseProgram(0));
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-		r += increment;
+		float r = 0.0f;
+		float increment = 0.05f;
+		// 循环直到用户关闭窗口
+		while (!glfwWindowShouldClose(window))
+		{
+			// 渲染
+			GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-		// 交换前后缓冲区
-		glfwSwapBuffers(window);
+			GLCall(glUseProgram(shader));
+			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-		// 轮询和处理事件
-		glfwPollEvents();
+			GLCall(glBindVertexArray(vao));
+			ib.Bind();
+
+			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+			if (r > 1.0f)
+				increment = -0.05f;
+			else if (r < 0.0f)
+				increment = 0.05f;
+
+			r += increment;
+
+			// 交换前后缓冲区
+			glfwSwapBuffers(window);
+
+			// 轮询和处理事件
+			glfwPollEvents();
+		}
+
+		GLCall(glDeleteProgram(shader));
 	}
-
-	glDeleteProgram(shader);
 
 	glfwTerminate();
 	return 0;
