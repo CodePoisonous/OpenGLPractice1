@@ -9,7 +9,7 @@
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-
+#include "VertexArray.h"
 
 struct ShaderProgramSource
 {
@@ -132,7 +132,7 @@ int main(void)
 		// 图形端点位置xy坐标
 		float positions[] = {
 			-0.5f, -0.5f,	// 0
-			 0.5f, -0.5f,	// 1
+			 0.5f, -0.5f,	// 1 
 			 0.5f,  0.5f,	// 2
 			-0.5f,  0.5f,	// 3 
 		};
@@ -142,18 +142,13 @@ int main(void)
 			0, 1, 2,
 			2, 3, 0
 		};
-
-		unsigned int vao;		// vertex array object
-		GLCall(glGenVertexArrays(1, &vao));
-		GLCall(glBindVertexArray(vao));
-
-		// 生成positions的buffer
+			
+		VertexArray va;
 		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
-
-		GLCall(glEnableVertexAttribArray(0));
-		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
-
-		// 生成indices的buffer
+		VertexBufferLayout layout;
+		layout.Push<float>(2);			// positions 元素类型为 float, 坐标为xy两个元素一组
+		va.AddBuffer(vb, layout);
+		
 		IndexBuffer ib(indices, 6);
 
 		// 读取shader文件，生成shader program
@@ -166,10 +161,11 @@ int main(void)
 		ASSERT(location != -1);
 		GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-		GLCall(glBindVertexArray(0));
+		// 解绑
+		va.Unbind();
 		GLCall(glUseProgram(0));
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-		GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+		vb.Unbind();
+		ib.Unbind();
 
 		float r = 0.0f;
 		float increment = 0.05f;
@@ -182,7 +178,7 @@ int main(void)
 			GLCall(glUseProgram(shader));
 			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-			GLCall(glBindVertexArray(vao));
+			va.Bind();
 			ib.Bind();
 
 			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
