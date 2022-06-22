@@ -1,8 +1,7 @@
 #include "Renderer.h"
+#include "VertexBufferLayout.h"
 
 #include "VertexArray.h"
-
-
 
 VertexArray::VertexArray()
 {
@@ -30,13 +29,12 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
 	}
 }
 
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
 	GLCall(glBindVertexArray(m_RendererID));
 }
 
-void VertexArray::Unbind()
+void VertexArray::Unbind() const
 {
 	GLCall(glBindVertexArray(0));
-
 }

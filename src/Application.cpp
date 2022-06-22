@@ -9,6 +9,7 @@
 #include "Renderer.h"
 
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
 #include "Shader.h"
@@ -69,42 +70,32 @@ int main(void)
 		
 		IndexBuffer ib(indices, 6);
 
-		// 读取shader文件，生成shader program
 		Shader shader("res/shaders/Basic.shader");
-		//ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-		//unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 		shader.Bind();
-		//GLCall(glUseProgram(shader));
-
-		// 设置fragment shader 的颜色
 		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-		//GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-		//ASSERT(location != -1);
-		//GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-		// 解绑
 		va.Unbind();
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
 
+		Renderer renderer;
 		float r = 0.0f;
 		float increment = 0.05f;
 		// 循环直到用户关闭窗口
 		while (!glfwWindowShouldClose(window))
 		{
 			// 渲染
-			GLCall(glClear(GL_COLOR_BUFFER_BIT));
+			renderer.Clear();
+			// GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 			shader.Bind();			
-			// GLCall(glUseProgram(shader));
 			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);	
-			// GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-			va.Bind();
-			ib.Bind();
-
-			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+			renderer.Draw(va, ib, shader);
+			// va.Bind();
+			// ib.Bind();
+			// GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 			if (r > 1.0f)
 				increment = -0.05f;
