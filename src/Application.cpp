@@ -13,6 +13,7 @@
 #include "IndexBuffer.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Texture.h"
 
 int main(void)
 {
@@ -50,10 +51,10 @@ int main(void)
 	{
 		// 图形端点位置xy坐标
 		float positions[] = {
-			-0.5f, -0.5f,	// 0
-			 0.5f, -0.5f,	// 1 
-			 0.5f,  0.5f,	// 2
-			-0.5f,  0.5f,	// 3 
+			-0.5f, -0.5f, 0.0f, 0.0f,	// 0
+			 0.5f, -0.5f, 1.0f, 0.0f,	// 1 
+			 0.5f,  0.5f, 1.0f, 1.0f,	// 2
+			-0.5f,  0.5f, 0.0f, 1.0f	// 3 
 		};
 
 		// 图形端点的索引序号
@@ -61,11 +62,16 @@ int main(void)
 			0, 1, 2,
 			2, 3, 0
 		};
-			
+
+		GLCall(glEnable(GL_BLEND));		 // enable blending 启用混合
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));	// blend alpha pixels 混合alpha像素
+
 		VertexArray va;
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
+
 		VertexBufferLayout layout;
 		layout.Push<float>(2);			// positions 元素类型为 float, 坐标为xy两个元素一组
+		layout.Push<float>(2);			// texture
 		va.AddBuffer(vb, layout);
 		
 		IndexBuffer ib(indices, 6);
@@ -74,35 +80,35 @@ int main(void)
 		shader.Bind();
 		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
+		Texture texture("res/textures/ChernoLogo.png");
+		texture.Bind();
+		shader.SetUniform1i("u_Texture", 0);
+
 		va.Unbind();
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
-
+		
 		Renderer renderer;
-		float r = 0.0f;
-		float increment = 0.05f;
+		//float r = 0.0f;
+		//float increment = 0.05f;
 		// 循环直到用户关闭窗口
 		while (!glfwWindowShouldClose(window))
 		{
 			// 渲染
 			renderer.Clear();
-			// GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-			shader.Bind();			
-			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);	
+			//shader.Bind();			
+			//shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);	
 
 			renderer.Draw(va, ib, shader);
-			// va.Bind();
-			// ib.Bind();
-			// GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
-			if (r > 1.0f)
-				increment = -0.05f;
-			else if (r < 0.0f)
-				increment = 0.05f;
-
-			r += increment;
+			///if (r > 1.0f)
+			///	increment = -0.05f;
+			///else if (r < 0.0f)
+			///	increment = 0.05f;
+			///
+			///r += increment;
 
 			// 交换前后缓冲区
 			glfwSwapBuffers(window);
