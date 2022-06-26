@@ -1,4 +1,4 @@
-#include "vender/std_image/stb_image.h"
+#include "std_image/stb_image.h"
 
 #include "Texture.h"
 
