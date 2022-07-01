@@ -18,6 +18,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
 int main(void)
 {
 	GLFWwindow* window;
@@ -31,7 +34,7 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// 创建窗口模式窗口及其 OpenGL 上下文
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(960, 540, "Hello World", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -54,10 +57,10 @@ int main(void)
 	{
 		// 图形端点位置xy坐标
 		float positions[] = {
-			-0.5f, -0.5f, 0.0f, 0.0f,	// 0
-			 0.5f, -0.5f, 1.0f, 0.0f,	// 1 
-			 0.5f,  0.5f, 1.0f, 1.0f,	// 2
-			-0.5f,  0.5f, 0.0f, 1.0f	// 3 
+			0.0f, 0.0f, 0.0f, 0.0f,		// 0
+			480.0f, 0.0f, 1.0f, 0.0f,	// 1 
+			480.0f, 270.0f, 1.0f, 1.0f,	// 2
+			0.0f, 270.0f, 0.0f, 1.0f	// 3 
 		};
 
 		// 图形端点的索引序号
@@ -79,12 +82,11 @@ int main(void)
 		
 		IndexBuffer ib(indices, 6);
 
-		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);		// orthographic matrix 正交矩阵
+		glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);		// orthographic matrix 正交矩阵
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(100, 0, 0));
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
-		//shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-		shader.SetUniformMat4f("u_MVP", proj);
 
 		Texture texture("res/textures/ChernoLogo.png");
 		texture.Bind();
@@ -94,15 +96,39 @@ int main(void)
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
-		
+
 		Renderer renderer;
+
+		// Setup ImGui binding
+		ImGui::CreateContext();
+		ImGui_ImplGlfwGL3_Init(window, true);
+
+		// Setup style
+		ImGui::StyleColorsDark();
+
 		// 循环直到用户关闭窗口
+		glm::vec3 translation(200, 200, 0);
 		while (!glfwWindowShouldClose(window))
 		{
-			// 渲染
-			renderer.Clear();
+			ImGui_ImplGlfwGL3_NewFrame();
 			
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 mvp = proj * view * model;	// model view projection
+
+			// 渲染
+			renderer.Clear();			
 			renderer.Draw(va, ib, shader);
+			shader.SetUniformMat4f("u_MVP", mvp);
+
+			// Show a simple window.
+			{
+				ImGui::SliderFloat3("translation", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			}
+
+			ImGui::Render();
+			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
 
 			// 交换前后缓冲区
 			glfwSwapBuffers(window);
@@ -112,6 +138,9 @@ int main(void)
 		}
 	}
 
+	// Cleanup
+	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
 	glfwTerminate();
 	return 0;
 }
