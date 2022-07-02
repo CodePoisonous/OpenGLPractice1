@@ -57,10 +57,10 @@ int main(void)
 	{
 		// 图形端点位置xy坐标
 		float positions[] = {
-			0.0f, 0.0f, 0.0f, 0.0f,		// 0
-			480.0f, 0.0f, 1.0f, 0.0f,	// 1 
-			480.0f, 270.0f, 1.0f, 1.0f,	// 2
-			0.0f, 270.0f, 0.0f, 1.0f	// 3 
+			-50.0f, -50.0f, 0.0f, 0.0f,	// 0
+			 50.0f, -50.0f, 1.0f, 0.0f,	// 1 
+			 50.0f,  50.0f, 1.0f, 1.0f,	// 2
+			-50.0f,  50.0f, 0.0f, 1.0f	// 3 
 		};
 
 		// 图形端点的索引序号
@@ -83,7 +83,7 @@ int main(void)
 		IndexBuffer ib(indices, 6);
 
 		glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);		// orthographic matrix 正交矩阵
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(100, 0, 0));
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
@@ -107,22 +107,37 @@ int main(void)
 		ImGui::StyleColorsDark();
 
 		// 循环直到用户关闭窗口
-		glm::vec3 translation(200, 200, 0);
+		glm::vec3 translationA(200, 200, 0);
+		glm::vec3 translationB(400, 200, 0);
 		while (!glfwWindowShouldClose(window))
 		{
+			// 渲染
+			renderer.Clear();
+
 			ImGui_ImplGlfwGL3_NewFrame();
 			
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
-			glm::mat4 mvp = proj * view * model;	// model view projection
+			{
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+				glm::mat4 mvp = proj * view * model;
+				shader.Bind();
+				shader.SetUniformMat4f("u_MVP", mvp);
 
-			// 渲染
-			renderer.Clear();			
+			}
+
+			{
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+				glm::mat4 mvp = proj * view * model;
+				shader.Bind();
+				//renderer.Draw(va, ib, shader);
+				shader.SetUniformMat4f("u_MVP", mvp);
+			}
+
 			renderer.Draw(va, ib, shader);
-			shader.SetUniformMat4f("u_MVP", mvp);
 
 			// Show a simple window.
 			{
-				ImGui::SliderFloat3("translation", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+				ImGui::SliderFloat3("translation A", &translationA.x, 0.0f, 960.0f);
+				ImGui::SliderFloat3("translation B", &translationB.x, 0.0f, 960.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			}
 
