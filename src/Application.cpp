@@ -6,6 +6,12 @@
 #include <string>
 #include <sstream>
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
 #include "Renderer.h"
 
 #include "VertexBuffer.h"
@@ -15,14 +21,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw_gl3.h"
-
 #include "tests/TestClearColor.h"
 #include "tests/TestTexture2D.h"
+#include "tests/TestBatchRender.h"
 
 int main(void)
 {
@@ -74,7 +75,7 @@ int main(void)
 
 		testMenu->RegisterTest<test::TestClearColor>("Clear Color");
 		testMenu->RegisterTest<test::TestTexture2D>("2D Texture"); 
-
+		testMenu->RegisterTest<test::TestBatchRender>("Batch Render");
 		while (!glfwWindowShouldClose(window))
 		{
 			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));	// 进入色条编辑器（ColorEdit4）之后会失效
