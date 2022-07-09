@@ -16,15 +16,15 @@ namespace test {
 	{
 		// 图形端点位置xy坐标
 		float positions[] = {
-			-50.0f, -50.0f, 0.0f, 0.0f,	// 0
-			 50.0f, -50.0f, 1.0f, 0.0f,	// 1 
-			 50.0f,  50.0f, 1.0f, 1.0f,	// 2
-			-50.0f,  50.0f, 0.0f, 1.0f,	// 3 
+			-100.0f, -100.0f, 0.0f, 0.0f, 0.0f,
+			 100.0f, -100.0f, 1.0f, 0.0f, 0.0f,
+			 100.0f,  100.0f, 1.0f, 1.0f, 0.0f,
+			-100.0f,  100.0f, 0.0f, 1.0f, 0.0f,
 
-			 50.0f,  50.0f, 0.0f, 0.0f,
-			150.0f,  50.0f, 1.0f, 0.0f,
-			150.0f, 150.0f, 1.0f, 1.0f,
-			 50.0f, 150.0f, 0.0f, 1.0f
+			 200.0f, -100.0f, 0.0f, 0.0f, 1.0f,
+			 400.0f, -100.0f, 1.0f, 0.0f, 1.0f,
+			 400.0f,  100.0f, 1.0f, 1.0f, 1.0f,
+			 200.0f,  100.0f, 0.0f, 1.0f, 1.0f
 		};
 
 		// 图形端点的索引序号
@@ -38,10 +38,12 @@ namespace test {
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 		m_VAO = std::make_unique<VertexArray>();
-		m_VertexBuffer = std::make_unique<VertexBuffer>(positions, 8 * 4 * sizeof(float));
+
+		m_VertexBuffer = std::make_unique<VertexBuffer>(positions, 8 * 5 * sizeof(float));
 		VertexBufferLayout layout;
 		layout.Push<float>(2);			// positions 元素类型为 float, 坐标为xy两个元素一组
 		layout.Push<float>(2);			// texture
+		layout.Push<float>(1);			// slot
 		m_VAO->AddBuffer(*m_VertexBuffer, layout);
 
 		m_IndexBuffer = std::make_unique<IndexBuffer>(indices, 12);
@@ -49,8 +51,11 @@ namespace test {
 		m_Shader = std::make_unique<Shader>("res/shaders/Basic.shader");
 		m_Shader->Bind();
 
-		m_Texture = std::make_unique<Texture>("res/textures/ChernoLogo.png");
-		m_Shader->SetUniform1i("u_Texture", 0);
+		m_Texture[0] = std::make_unique<Texture>("res/textures/ChernoLogo.png");
+		m_Texture[1] = std::make_unique<Texture>("res/textures/HazelLogo.png");
+
+		int samplers[2] = { 0, 1 };
+		m_Shader->SetUniform1iv("u_Textures", 2, samplers);
 	}
 
 	TestBatchRender::~TestBatchRender()
@@ -70,7 +75,11 @@ namespace test {
 
 		Renderer renderer;
 
-		m_Texture->Bind();
+		for (size_t i = 0; i < 2; ++i)
+		{
+			m_Texture[i]->Bind(i);
+		}
+
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), m_Translation);
 		glm::mat4 mvp = m_Proj * m_View * model;
