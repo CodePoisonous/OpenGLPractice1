@@ -1,2 +1,1 @@
-# OpenGL Practice
-My OpenGL Practice
+# OpenGL_Practice_1
