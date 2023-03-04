@@ -1,1 +1,1 @@
-# OpenGL_Practice_1
+# OpenGL Practice1
